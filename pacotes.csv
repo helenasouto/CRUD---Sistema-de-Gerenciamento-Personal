@@ -1,0 +1,4 @@
+id,nome,frequenciaSemanal,preco,limiteReposicoes,ativo,criadoEm,atualizadoEm
+1,Básico,2,150.00,1,TRUE,01/03/2026 10:00:00,01/03/2026 10:00:00
+2,Premium,3,200.00,2,TRUE,01/03/2026 10:00:00,01/03/2026 10:00:00
+3,Elite,5,300.00,4,TRUE,01/03/2026 10:00:00,01/03/2026 10:00:00

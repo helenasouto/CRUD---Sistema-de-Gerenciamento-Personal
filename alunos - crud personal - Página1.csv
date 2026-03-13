@@ -1,0 +1,6 @@
+id,nome,email,telefone,dataNascimento,sexo,peso,altura,objetivo,nivelExperiencia,restricaoMedica,status,dataInicioContrato,criadoEm,atualizadoEm,pacoteId
+1,Carlos Silva,carlos@email.com,11999999999,1990-05-15,MASCULINO,80.50,1.75,Hipertrofia,INTERMEDIARIO,,ATIVO,2026-03-13,2026-03-13 10:00:00,2026-03-13 10:00:00,1
+2,Ana Souza,ana@email.com,11988888888,1995-08-22,FEMININO,65.00,1.68,Emagrecimento,INICIANTE,Asma,ATIVO,2026-03-13,2026-03-13 10:15:00,2026-03-13 10:15:00,2
+3,Bruno Lima,bruno@email.com,11977777777,1988-11-30,MASCULINO,90.20,1.82,Condicionamento,AVANCADO,,ATIVO,2026-03-13,2026-03-13 10:30:00,2026-03-13 10:30:00,3
+4,Carla Dias,carla@email.com,11966666666,2000-02-10,FEMININO,58.50,1.60,Hipertrofia,INICIANTE,,INATIVO,2026-02-01,2026-02-01 09:00:00,2026-03-10 15:00:00,1
+5,Diego Costa,diego@email.com,11955555555,1985-07-05,MASCULINO,75.00,1.70,Reabilitação,INTERMEDIARIO,Lesão joelho,ATIVO,2026-03-13,2026-03-13 11:00:00,2026-03-13 11:00:00,2
