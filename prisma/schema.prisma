@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sexo {
+  MASCULINO
+  FEMININO
+  OUTRO
+}
+
+enum NivelExperiencia {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+}
+
+enum StatusAluno {
+  ATIVO
+  INATIVO
+  SUSPENSO
+}
+
+enum DiaSemana {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
+enum StatusSessao {
+  AGENDADA
+  REALIZADA
+  CANCELADA
+  FALTA
+}
+
+enum TipoSessao {
+  NORMAL
+  REPOSICAO
+}
+
+model Pacote {
+  id                 Int      @id @default(autoincrement())
+  nome               String   @db.VarChar(100)
+  frequenciaSemanal  Int      // quantas vezes por semana (2, 3, 4...)
+  preco              Decimal  @db.Decimal(10, 2)
+  limiteReposicoes   Int      @default(1) // máximo de reposições permitidas no mês
+  ativo              Boolean  @default(true)
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+
+  alunos Aluno[]
+
+  @@index([ativo])
+  @@map("pacotes")
+}
+
+/// Aluno cadastrado no sistema
+model Aluno {
+  id                 Int              @id @default(autoincrement())
+  nome               String           @db.VarChar(100)
+  email              String           @unique @db.VarChar(150)
+  telefone           String           @db.VarChar(20)
+  dataNascimento     DateTime         @db.Date
+  sexo               Sexo
+  peso               Decimal?         @db.Decimal(5, 2)
+  altura             Decimal?         @db.Decimal(4, 2)
+  objetivo           String?          @db.VarChar(255)
+  nivelExperiencia   NivelExperiencia @default(INICIANTE)
+  restricaoMedica    String?          @db.Text
+  status             StatusAluno      @default(ATIVO)
+  dataInicioContrato DateTime         @db.Date  // define o ciclo mensal do aluno
+  criadoEm          DateTime         @default(now())
+  atualizadoEm      DateTime         @updatedAt
+
+  pacoteId   Int
+  pacote     Pacote      @relation(fields: [pacoteId], references: [id], onDelete: Restrict)
+
+  sessoes    Sessao[]
+  avaliacoes Avaliacao[]
+
+  @@index([nome])
+  @@index([status])
+  @@index([pacoteId])
+  @@map("alunos")
+}
+
+/// Sessão de treino do aluno
+model Sessao {
+  id            Int          @id @default(autoincrement())
+  data          DateTime     @db.Date
+  horarioInicio DateTime     @db.Time()
+  horarioFim    DateTime     @db.Time()
+  diaSemana     DiaSemana
+  tipo          TipoSessao   @default(NORMAL)   // NORMAL ou REPOSICAO
+  status        StatusSessao @default(AGENDADA)
+  observacoes   String?      @db.Text
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  @@index([alunoId])
+  @@index([data])
+  @@index([status])
+  @@index([tipo])
+  @@map("sessoes")
+}
+
+/// Avaliação física periódica do aluno
+model Avaliacao {
+  id                    Int      @id @default(autoincrement())
+  dataAvaliacao         DateTime @db.Date
+  peso                  Decimal  @db.Decimal(5, 2)
+  altura                Decimal  @db.Decimal(4, 2)
+  imc                   Decimal  @db.Decimal(5, 2)
+  percentualGordura     Decimal? @db.Decimal(5, 2)
+  massaMagra            Decimal? @db.Decimal(5, 2)
+  observacoes           String?  @db.Text
+  criadoEm             DateTime @default(now())
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  @@index([alunoId])
+  @@index([dataAvaliacao])
+  @@map("avaliacoes")
+}
