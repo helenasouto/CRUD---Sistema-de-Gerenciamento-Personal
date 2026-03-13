@@ -40,6 +40,7 @@ enum StatusSessao {
   REALIZADA
   CANCELADA
   FALTA
+  REAGENDADA
 }
 
 enum TipoSessao {
@@ -47,15 +48,29 @@ enum TipoSessao {
   REPOSICAO
 }
 
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  CONFIRMADO
+  CANCELADO
+}
+
 model Pacote {
-  id                 Int      @id @default(autoincrement())
-  nome               String   @db.VarChar(100)
-  frequenciaSemanal  Int      // quantas vezes por semana (2, 3, 4...)
-  preco              Decimal  @db.Decimal(10, 2)
-  limiteReposicoes   Int      @default(1) // máximo de reposições permitidas no mês
-  ativo              Boolean  @default(true)
-  criadoEm          DateTime @default(now())
-  atualizadoEm      DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  nome              String   @db.VarChar(100)
+  frequenciaSemanal Int
+  preco             Decimal  @db.Decimal(10, 2)
+  limiteReposicoes  Int      @default(1)
+  ativo             Boolean  @default(true)
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
 
   alunos Aluno[]
 
@@ -63,7 +78,6 @@ model Pacote {
   @@map("pacotes")
 }
 
-/// Aluno cadastrado no sistema
 model Aluno {
   id                 Int              @id @default(autoincrement())
   nome               String           @db.VarChar(100)
@@ -77,15 +91,16 @@ model Aluno {
   nivelExperiencia   NivelExperiencia @default(INICIANTE)
   restricaoMedica    String?          @db.Text
   status             StatusAluno      @default(ATIVO)
-  dataInicioContrato DateTime         @db.Date  // define o ciclo mensal do aluno
+  dataInicioContrato DateTime         @db.Date
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
 
-  pacoteId   Int
-  pacote     Pacote      @relation(fields: [pacoteId], references: [id], onDelete: Restrict)
+  pacoteId Int
+  pacote   Pacote @relation(fields: [pacoteId], references: [id], onDelete: Restrict)
 
   sessoes    Sessao[]
   avaliacoes Avaliacao[]
+  pagamentos Pagamento[]
 
   @@index([nome])
   @@index([status])
@@ -93,14 +108,13 @@ model Aluno {
   @@map("alunos")
 }
 
-/// Sessão de treino do aluno
 model Sessao {
   id            Int          @id @default(autoincrement())
   data          DateTime     @db.Date
   horarioInicio DateTime     @db.Time()
   horarioFim    DateTime     @db.Time()
   diaSemana     DiaSemana
-  tipo          TipoSessao   @default(NORMAL)   // NORMAL ou REPOSICAO
+  tipo          TipoSessao   @default(NORMAL)
   status        StatusSessao @default(AGENDADA)
   observacoes   String?      @db.Text
   criadoEm     DateTime     @default(now())
@@ -109,6 +123,8 @@ model Sessao {
   alunoId Int
   aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
 
+  historico HistoricoSessao[]
+
   @@index([alunoId])
   @@index([data])
   @@index([status])
@@ -116,17 +132,33 @@ model Sessao {
   @@map("sessoes")
 }
 
-/// Avaliação física periódica do aluno
-model Avaliacao {
+/// Registra cada vez que uma sessão foi reagendada
+model HistoricoSessao {
   id                    Int      @id @default(autoincrement())
-  dataAvaliacao         DateTime @db.Date
-  peso                  Decimal  @db.Decimal(5, 2)
-  altura                Decimal  @db.Decimal(4, 2)
-  imc                   Decimal  @db.Decimal(5, 2)
-  percentualGordura     Decimal? @db.Decimal(5, 2)
-  massaMagra            Decimal? @db.Decimal(5, 2)
-  observacoes           String?  @db.Text
-  criadoEm             DateTime @default(now())
+  dataOriginal          DateTime @db.Date
+  horarioInicioOriginal DateTime @db.Time()
+  horarioFimOriginal    DateTime @db.Time()
+  dataAlterada          DateTime @db.Date
+  horarioInicioAlterado DateTime @db.Time()
+  horarioFimAlterado    DateTime @db.Time()
+  alteradoEm           DateTime @default(now())
+
+  sessaoId Int
+  sessao   Sessao @relation(fields: [sessaoId], references: [id], onDelete: Restrict)
+
+  @@index([sessaoId])
+  @@map("historico_sessoes")
+}
+
+model Avaliacao {
+  id                Int      @id @default(autoincrement())
+  dataAvaliacao     DateTime @db.Date
+  peso              Decimal  @db.Decimal(5, 2)
+  altura            Decimal  @db.Decimal(4, 2)
+  imc               Decimal  @db.Decimal(5, 2)
+  percentualGordura Decimal? @db.Decimal(5, 2)
+  massaMagra        Decimal? @db.Decimal(5, 2)
+  criadoEm         DateTime @default(now())
 
   alunoId Int
   aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
@@ -134,4 +166,23 @@ model Avaliacao {
   @@index([alunoId])
   @@index([dataAvaliacao])
   @@map("avaliacoes")
+}
+
+model Pagamento {
+  id             Int             @id @default(autoincrement())
+  valor          Decimal         @db.Decimal(10, 2)
+  formaPagamento FormaPagamento
+  status         StatusPagamento @default(PENDENTE)
+  dataVencimento DateTime        @db.Date
+  dataPagamento  DateTime?       @db.Date
+  criadoEm      DateTime        @default(now())
+  atualizadoEm  DateTime        @updatedAt
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  @@index([alunoId])
+  @@index([status])
+  @@index([dataVencimento])
+  @@map("pagamentos")
 }
