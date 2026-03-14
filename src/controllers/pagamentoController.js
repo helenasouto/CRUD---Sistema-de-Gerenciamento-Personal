@@ -1,95 +1,43 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { pagamentoServices } from '../services/pagamentoServices.js'
 
 export const cadastrarPagamento = async (req, res) => {
   try {
-    const { alunoId, valor, formaPagamento, dataVencimento, dataPagamento } = req.body
-
-    if (!alunoId || !valor || !formaPagamento || !dataVencimento) {
-      return res.status(400).json({ error: 'Campos obrigatórios: alunoId, valor, formaPagamento, dataVencimento.' })
-    }
-
-    const aluno = await prisma.aluno.findUnique({ where: { id: Number(alunoId) } })
-    if (!aluno) {
-      return res.status(404).json({ error: 'Aluno não encontrado.' })
-    }
-
-    const pagamento = await prisma.pagamento.create({
-      data: {
-        alunoId: Number(alunoId),
-        valor: parseFloat(valor),
-        formaPagamento,
-        dataVencimento: new Date(dataVencimento),
-        dataPagamento: dataPagamento ? new Date(dataPagamento) : undefined,
-      }
-    })
-
+    const pagamento = await pagamentoServices.cadastrar(req.body)
     res.status(201).json(pagamento)
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
 
 export const listarPagamentos = async (req, res) => {
   try {
-    const pagamentos = await prisma.pagamento.findMany({
-      include: { aluno: true }
-    })
+    const pagamentos = await pagamentoServices.listar()
     res.status(200).json(pagamentos)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
 export const listarPagamentosAluno = async (req, res) => {
   try {
-    const { alunoId } = req.params
-    const pagamentos = await prisma.pagamento.findMany({
-      where: { alunoId: Number(alunoId) },
-      include: { aluno: true }
-    })
+    const pagamentos = await pagamentoServices.listarPorAluno(req.params.alunoId)
     res.status(200).json(pagamentos)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+export const listarPagamentosPorNomeAluno = async (req, res) => {
+  try {
+    const pagamentos = await pagamentoServices.listarPorNomeAluno(req.query.nome)
+    res.status(200).json(pagamentos)
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }) }
 }
 
 export const atualizarStatusPagamento = async (req, res) => {
   try {
-    const { id } = req.params
-    const { status, dataPagamento } = req.body
-
-    const pagamento = await prisma.pagamento.findUnique({ where: { id: Number(id) } })
-    if (!pagamento) {
-      return res.status(404).json({ error: 'Pagamento não encontrado.' })
-    }
-
-    const atualizado = await prisma.pagamento.update({
-      where: { id: Number(id) },
-      data: {
-        status,
-        dataPagamento: dataPagamento ? new Date(dataPagamento) : undefined,
-      }
-    })
-
+    const atualizado = await pagamentoServices.atualizarStatus(req.params.id, req.body)
     res.status(200).json(atualizado)
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
 
 export const deletarPagamento = async (req, res) => {
   try {
-    const { id } = req.params
-
-    const pagamento = await prisma.pagamento.findUnique({ where: { id: Number(id) } })
-    if (!pagamento) {
-      return res.status(404).json({ error: 'Pagamento não encontrado.' })
-    }
-
-    await prisma.pagamento.delete({ where: { id: Number(id) } })
+    await pagamentoServices.deletar(req.params.id)
     res.status(200).json({ message: 'Pagamento deletado com sucesso.' })
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
