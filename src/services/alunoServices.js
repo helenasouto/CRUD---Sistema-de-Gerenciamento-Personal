@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
-export const alunoService = {
+export const alunoServices = {
   async cadastrar(dados) {
     const { nome, email, telefone, dataNascimento, sexo, dataInicioContrato, pacoteId } = dados
     if (!nome || !email || !telefone || !dataNascimento || !sexo || !pacoteId || !dataInicioContrato)
