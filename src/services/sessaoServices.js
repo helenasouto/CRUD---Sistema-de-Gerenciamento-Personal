@@ -1,34 +1,89 @@
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
+function parseHorario(horario) {
+  const [h, m, s] = horario.split(':')
+  const d = new Date(0)
+  d.setUTCHours(Number(h), Number(m), Number(s || 0), 0)
+  return d
+}
+
 export const sessaoServices = {
 
-  async cadastrar(dados) {
-    const { nomeAluno, data, horarioInicio, horarioFim, diaSemana, tipo, observacoes } = dados
-    if (!nomeAluno || !data || !horarioInicio || !horarioFim || !diaSemana)
-      throw { status: 400, message: 'Campos obrigatórios: nomeAluno, data, horarioInicio, horarioFim, diaSemana.' }
+async cadastrar(dados) {
+  const { nomeAluno, data, horarioInicio, horarioFim, diaSemana, tipo, observacoes } = dados
+  if (!nomeAluno || !data || !horarioInicio || !horarioFim || !diaSemana)
+    throw { status: 400, message: 'Campos obrigatórios: nomeAluno, data, horarioInicio, horarioFim, diaSemana.' }
 
-    const alunos = await prisma.aluno.findMany({
-      where: { nome: { contains: nomeAluno, mode: 'insensitive' } }
-    })
+  const alunos = await prisma.aluno.findMany({
+    where: { nome: { contains: nomeAluno, mode: 'insensitive' } }
+  })
 
-    if (alunos.length === 0)
-      throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nomeAluno}".` }
+  if (alunos.length === 0)
+    throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nomeAluno}".` }
 
-    if (alunos.length > 1)
-      throw { status: 409, message: `Mais de um aluno encontrado com o nome "${nomeAluno}". Seja mais específico.` }
+  if (alunos.length > 1)
+    throw { status: 409, message: `Mais de um aluno encontrado com o nome "${nomeAluno}". Seja mais específico.` }
 
-    return prisma.sessao.create({
-      data: {
-        alunoId: alunos[0].id,
-        data: new Date(data),
-        horarioInicio: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFim: new Date(`1970-01-01T${horarioFim}`),
-        diaSemana, tipo, observacoes
-      }
-    })
-  },
+  if (alunos[0].status === 'INATIVO')
+    throw { status: 403, message: `Aluno "${alunos[0].nome}" está inativo e não pode agendar sessões.` }
 
+  if (alunos[0].status === 'SUSPENSO')
+    throw { status: 403, message: `Aluno "${alunos[0].nome}" está suspenso e não pode agendar sessões.` }
+
+  const conflito = await prisma.sessao.findFirst({
+    where: {
+      alunoId: alunos[0].id,
+      data: new Date(data),
+      status: { not: 'CANCELADA' },
+      OR: [
+        {
+          horarioInicio: { lte: parseHorario(horarioInicio) },
+          horarioFim: { gt: parseHorario(horarioInicio) }
+        },
+        {
+          horarioInicio: { lt: parseHorario(horarioFim) },
+          horarioFim: { gte: parseHorario(horarioFim) }
+        }
+      ]
+    }
+  })
+
+  if (conflito)
+    throw { status: 409, message: `Aluno "${alunos[0].nome}" já possui sessão agendada nesse horário.` }
+
+  const pacote = await prisma.pacote.findUnique({ where: { id: alunos[0].pacoteId } })
+
+  const inicioDaSemana = new Date(data)
+inicioDaSemana.setUTCHours(0, 0, 0, 0)
+const diaSemanaNum = inicioDaSemana.getUTCDay() === 0 ? 6 : inicioDaSemana.getUTCDay() - 1
+inicioDaSemana.setUTCDate(inicioDaSemana.getUTCDate() - diaSemanaNum)
+
+const fimDaSemana = new Date(inicioDaSemana)
+fimDaSemana.setUTCDate(fimDaSemana.getUTCDate() + 6)
+fimDaSemana.setUTCHours(23, 59, 59, 999)
+
+  const sessoesNaSemana = await prisma.sessao.count({
+    where: {
+      alunoId: alunos[0].id,
+      data: { gte: inicioDaSemana, lte: fimDaSemana },
+      status: { not: 'CANCELADA' }
+    }
+  })
+
+  if (sessoesNaSemana >= pacote.frequenciaSemanal)
+    throw { status: 409, message: `Aluno "${alunos[0].nome}" já atingiu o limite de ${pacote.frequenciaSemanal} sessões por semana do pacote "${pacote.nome}".` }
+
+  return prisma.sessao.create({
+    data: {
+      alunoId: alunos[0].id,
+      data: new Date(data),
+      horarioInicio: parseHorario(horarioInicio),
+      horarioFim: parseHorario(horarioFim),
+      diaSemana, tipo, observacoes
+    }
+  })
+},
   async listar() {
     return prisma.sessao.findMany({ include: { aluno: true } })
   },
@@ -80,8 +135,8 @@ export const sessaoServices = {
         horarioInicioOriginal: sessaoAtual.horarioInicio,
         horarioFimOriginal: sessaoAtual.horarioFim,
         dataAlterada: new Date(data),
-        horarioInicioAlterado: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFimAlterado: new Date(`1970-01-01T${horarioFim}`)
+        horarioInicioAlterado: parseHorario(horarioInicio),
+        horarioFimAlterado: parseHorario(horarioFim)
       }
     })
 
@@ -89,8 +144,8 @@ export const sessaoServices = {
       where: { id: Number(id) },
       data: {
         data: new Date(data),
-        horarioInicio: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFim: new Date(`1970-01-01T${horarioFim}`),
+        horarioInicio: parseHorario(horarioInicio),
+        horarioFim: parseHorario(horarioFim),
         diaSemana, status: 'REAGENDADA'
       }
     })
