@@ -1,26 +1,22 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { historicoSessaoServices } from '../services/historicoSessaoServices.js'
 
 export const listarHistorico = async (req, res) => {
   try {
-    const historico = await prisma.historicoSessao.findMany({
-      include: { sessao: true }
-    })
+    const historico = await historicoSessaoServices.listar()
     res.status(200).json(historico)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
-export const listarHistoricoSessao = async (req, res) => {
+export const listarHistoricoPorSessao = async (req, res) => {
   try {
-    const { sessaoId } = req.params
-    const historico = await prisma.historicoSessao.findMany({
-      where: { sessaoId: Number(sessaoId) },
-      include: { sessao: true }
-    })
+    const historico = await historicoSessaoServices.listarPorSessao(req.params.sessaoId)
     res.status(200).json(historico)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }) }
+}
+
+export const listarHistoricoPorNomeAluno = async (req, res) => {
+  try {
+    const historico = await historicoSessaoServices.listarPorNomeAluno(req.query.nome)
+    res.status(200).json(historico)
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }) }
 }
