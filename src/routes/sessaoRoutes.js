@@ -2,7 +2,8 @@ import express from 'express'
 import {
   cadastrarSessao,
   listarSessoes,
-  listarSessoesAlunoEspecifico,
+  listarSessoesAluno,
+  listarSessoesPorNomeAluno,
   atualizarStatus,
   reagendarSessao,
   deletarSessao
@@ -12,7 +13,8 @@ const router = express.Router()
 
 router.post('/cadastro', cadastrarSessao)
 router.get('/todos', listarSessoes)
-router.get('/aluno/:alunoId', listarSessoesAlunoEspecifico)
+router.get('/aluno/buscar', listarSessoesPorNomeAluno)
+router.get('/aluno/:alunoId', listarSessoesAluno)
 router.patch('/status/:id', atualizarStatus)
 router.patch('/reagendar/:id', reagendarSessao)
 router.delete('/deletar/:id', deletarSessao)

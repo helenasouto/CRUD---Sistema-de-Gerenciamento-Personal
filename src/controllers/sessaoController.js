@@ -1,117 +1,50 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { sessaoServices } from '../services/sessaoServices.js'
 
 export const cadastrarSessao = async (req, res) => {
   try {
-    const { alunoId, data, horarioInicio, horarioFim, diaSemana, tipo, observacoes } = req.body
-    const sessao = await prisma.sessao.create({
-      data: {
-        alunoId: Number(alunoId),
-        data: new Date(data),
-        horarioInicio: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFim: new Date(`1970-01-01T${horarioFim}`),
-        diaSemana,
-        tipo,
-        observacoes
-      }
-    })
+    const sessao = await sessaoServices.cadastrar(req.body)
     res.status(201).json(sessao)
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
 
 export const listarSessoes = async (req, res) => {
   try {
-    const sessoes = await prisma.sessao.findMany({
-      include: { aluno: true }
-    })
+    const sessoes = await sessaoServices.listar()
     res.status(200).json(sessoes)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
-export const listarSessoesAlunoEspecifico = async (req, res) => {
+export const listarSessoesAluno = async (req, res) => {
   try {
-    const { alunoId } = req.params
-    const sessoes = await prisma.sessao.findMany({
-      where: { alunoId: Number(alunoId) },
-      include: { aluno: true }
-    })
+    const sessoes = await sessaoServices.listarPorAluno(req.params.alunoId)
     res.status(200).json(sessoes)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+export const listarSessoesPorNomeAluno = async (req, res) => {
+  try {
+    const sessoes = await sessaoServices.listarPorNomeAluno(req.query.nome)
+    res.status(200).json(sessoes)
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }) }
 }
 
 export const atualizarStatus = async (req, res) => {
   try {
-    const { id } = req.params
-    const { status } = req.body
-    const sessao = await prisma.sessao.update({
-      where: { id: Number(id) },
-      data: { status }
-    })
+    const sessao = await sessaoServices.atualizarStatus(req.params.id, req.body.status)
     res.status(200).json(sessao)
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
 
 export const reagendarSessao = async (req, res) => {
   try {
-    const { id } = req.params
-    const { data, horarioFim, horarioInicio, diaSemana } = req.body
-
-    const sessaoAtual = await prisma.sessao.findUnique({
-      where: { id: Number(id) }
-    })
-
-    if (!sessaoAtual) {
-      return res.status(404).json({ error: 'Sessão não encontrada.' })
-    }
-
-    await prisma.historicoSessao.create({
-      data: {
-        sessaoId: Number(id),
-        dataOriginal: sessaoAtual.data,
-        horarioInicioOriginal: sessaoAtual.horarioInicio,
-        horarioFimOriginal: sessaoAtual.horarioFim,
-        dataAlterada: new Date(data),
-        horarioInicioAlterado: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFimAlterado: new Date(`1970-01-01T${horarioFim}`)
-      }
-    })
-
-    const sessao = await prisma.sessao.update({
-      where: { id: Number(id) },
-      data: {
-        data: new Date(data),
-        horarioInicio: new Date(`1970-01-01T${horarioInicio}`),
-        horarioFim: new Date(`1970-01-01T${horarioFim}`),
-        diaSemana,
-        status: 'REAGENDADA'
-      }
-    })
-
+    const sessao = await sessaoServices.reagendar(req.params.id, req.body)
     res.status(200).json(sessao)
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
 
 export const deletarSessao = async (req, res) => {
   try {
-    const { id } = req.params
-    await prisma.historicoSessao.deleteMany({
-      where: { sessaoId: Number(id) }
-    })
-    await prisma.sessao.delete({
-      where: { id: Number(id) }
-    })
-    res.status(200).json({ message: 'Sessão deletada com sucesso' })
-  } catch (error) {
-    res.status(400).json({ error: error.message })
-  }
+    await sessaoServices.deletar(req.params.id)
+    res.status(200).json({ message: 'Sessão deletada com sucesso.' })
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
