@@ -21,6 +21,13 @@ export const buscarPacote = async (req, res) => {
   } catch (e) { res.status(e.status || 500).json({ error: e.message }) }
 }
 
+export const atualizarPacote = async (req, res) => {
+  try {
+    const pacote = await pacoteServices.atualizar(req.params.id, req.body)
+    res.status(200).json(pacote)
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
+}
+
 export const deletarPacote = async (req, res) => {
   try {
     await pacoteServices.deletar(req.params.id)
