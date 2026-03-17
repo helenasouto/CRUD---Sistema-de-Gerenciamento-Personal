@@ -55,13 +55,13 @@ async cadastrar(dados) {
   const pacote = await prisma.pacote.findUnique({ where: { id: alunos[0].pacoteId } })
 
   const inicioDaSemana = new Date(data)
-inicioDaSemana.setUTCHours(0, 0, 0, 0)
-const diaSemanaNum = inicioDaSemana.getUTCDay() === 0 ? 6 : inicioDaSemana.getUTCDay() - 1
-inicioDaSemana.setUTCDate(inicioDaSemana.getUTCDate() - diaSemanaNum)
+  inicioDaSemana.setUTCHours(0, 0, 0, 0)
+  const diaSemanaNum = inicioDaSemana.getUTCDay() === 0 ? 6 : inicioDaSemana.getUTCDay() - 1
+  inicioDaSemana.setUTCDate(inicioDaSemana.getUTCDate() - diaSemanaNum)
 
-const fimDaSemana = new Date(inicioDaSemana)
-fimDaSemana.setUTCDate(fimDaSemana.getUTCDate() + 6)
-fimDaSemana.setUTCHours(23, 59, 59, 999)
+  const fimDaSemana = new Date(inicioDaSemana)
+  fimDaSemana.setUTCDate(fimDaSemana.getUTCDate() + 6)
+  fimDaSemana.setUTCHours(23, 59, 59, 999)
 
   const sessoesNaSemana = await prisma.sessao.count({
     where: {
@@ -73,7 +73,7 @@ fimDaSemana.setUTCHours(23, 59, 59, 999)
 
   if (sessoesNaSemana >= pacote.frequenciaSemanal)
     throw { status: 409, message: `Aluno "${alunos[0].nome}" já atingiu o limite de ${pacote.frequenciaSemanal} sessões por semana do pacote "${pacote.nome}".` }
-
+  
   return prisma.sessao.create({
     data: {
       alunoId: alunos[0].id,
