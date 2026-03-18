@@ -86,7 +86,7 @@ npm install
 Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/nome_do_banco"
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/nome_do_banco?schema=public"
 ```
 
 ### 4. Rode as migrações
