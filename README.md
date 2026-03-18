@@ -143,6 +143,7 @@ O servidor será iniciado na porta **3000**.
 
 Abra um segundo terminal e mude para a branch do frontend:
 ```bash
+cd CRUD---Sistema-de-Gerenciamento-Personal
 git checkout develop_front
 npm install
 node src/index.js
