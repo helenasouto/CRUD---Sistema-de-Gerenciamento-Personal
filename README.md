@@ -26,7 +26,6 @@ Sistema de gerenciamento para personal trainers, com cadastro de alunos, sessõe
 ---
 
 ## Estrutura do projeto
-
 ```
 src/
 ├── controllers/       # Recebe requisições e chama os services
@@ -37,12 +36,12 @@ src/
 │   ├── avaliacaoController.js
 │   └── historicoSessaoController.js
 ├── services/          # Regras de negócio e acesso ao banco
-│   ├── alunoService.js
+│   ├── alunoServices.js
 │   ├── pacoteServices.js
 │   ├── sessaoServices.js
-│   ├── pagamentoService.js
-│   ├── avaliacaoService.js
-│   └── historicoSessaoService.js
+│   ├── pagamentoServices.js
+│   ├── avaliacaoServices.js
+│   └── historicoSessaoServices.js
 ├── routes/            # Definição das rotas da API
 │   ├── alunoRoutes.js
 │   ├── pacoteRoutes.js
@@ -53,6 +52,12 @@ src/
 └── server.js          # Ponto de entrada da aplicação
 prisma/
 └── schema.prisma      # Modelos e configuração do banco
+frontend/
+├── src/
+│   ├── api/           # Configuração das chamadas à API
+│   ├── menus/         # Menus interativos do terminal
+│   └── utils/         # Utilitários de display
+└── package.json
 ```
 
 ---
@@ -60,7 +65,7 @@ prisma/
 ## Pré-requisitos
 
 - Node.js v18+
-- Prisma 5
+- Prisma 5 (não instale a versão 7)
 - PostgreSQL 16 rodando localmente ou via Docker
 - npm
 
@@ -69,39 +74,62 @@ prisma/
 ## Como rodar o projeto
 
 ### 1. Clone o repositório
-
 ```bash
 git clone https://github.com/helenasouto/CRUD---Sistema-de-Gerenciamento-Personal
 cd CRUD---Sistema-de-Gerenciamento-Personal
 ```
 
-### 2. Instale as dependências
-
+### 2. Instale as dependências do backend
 ```bash
-npm install
+npm install express @prisma/adapter-pg pg dotenv
+npm install prisma@5 @prisma/client@5 --save-dev
 ```
 
 ### 3. Configure as variáveis de ambiente
 
 Crie um arquivo `.env` na raiz do projeto:
-
 ```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/nome_do_banco?schema=public"
+DATABASE_URL="postgresql://usuario:senha@localhost:5434/personal_trainer?schema=public"
 ```
 
 ### 4. Rode as migrações
-
 ```bash
 npx prisma migrate dev
 ```
 
-### 5. Inicie o servidor
+### 5. Gere o cliente Prisma
+```bash
+npx prisma generate
+```
 
+### 6. Inicie o servidor
 ```bash
 node src/server.js
 ```
 
 O servidor será iniciado na porta **3000**.
+
+---
+
+## Interface de Terminal (Frontend)
+
+### Como rodar a interface
+
+Abra um segundo terminal e mude para a branch do frontend:
+```bash
+git checkout develop_front
+npm install
+node src/index.js
+```
+
+### Funcionalidades disponíveis
+
+- **Alunos** — cadastrar, listar, buscar por nome, alterar e remover
+- **Sessões** — cadastrar, listar, listar por aluno, alterar status, reagendar e remover
+- **Avaliações** — cadastrar, listar, listar por aluno e remover
+- **Pagamentos** — cadastrar, listar, listar por aluno, alterar status e remover
+- **Pacotes** — cadastrar, listar, alterar e remover
+- **Relatório geral** — estatísticas completas do sistema
 
 ---
 
@@ -123,7 +151,6 @@ O servidor será iniciado na porta **3000**.
 | POST | /alunos/cadastro | Cadastrar aluno |
 | GET | /alunos/todos | Listar todos os alunos |
 | GET | /alunos/buscar?nome= | Buscar aluno por nome |
-| GET | /alunos/relatorio | Relatório de alunos |
 | GET | /alunos/:id | Buscar aluno por ID |
 | PUT | /alunos/atualizar/:id | Atualizar aluno |
 | DELETE | /alunos/deletar/:id | Deletar aluno por ID |
