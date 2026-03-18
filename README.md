@@ -85,9 +85,22 @@ npm install express @prisma/adapter-pg pg dotenv
 npm install prisma@5 @prisma/client@5 --save-dev
 ```
 
+> **Atenção:** caso o `npm install` instale o Prisma 7 por padrão e dê erro de incompatibilidade, force a versão 5:
+> ```bash
+> npm uninstall prisma @prisma/client
+> npm install prisma@5 @prisma/client@5 --save-dev
+> ```
+
 ### 3. Configure as variáveis de ambiente
 
-Crie um arquivo `.env` na raiz do projeto:
+Crie o arquivo `.env` na raiz do projeto:
+```bash
+cat > .env << 'EOF'
+DATABASE_URL="postgresql://usuario:senha@localhost:5434/personal_trainer?schema=public"
+EOF
+```
+
+Ou crie manualmente um arquivo `.env` com o conteúdo:
 ```env
 DATABASE_URL="postgresql://usuario:senha@localhost:5434/personal_trainer?schema=public"
 ```
