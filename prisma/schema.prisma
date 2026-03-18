@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sexo {
+  MASCULINO
+  FEMININO
+  OUTRO
+}
+
+enum NivelExperiencia {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+}
+
+enum StatusAluno {
+  ATIVO
+  INATIVO
+  SUSPENSO
+}
+
+enum DiaSemana {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
+enum StatusSessao {
+  AGENDADA
+  REALIZADA
+  CANCELADA
+  FALTA
+  REAGENDADA
+}
+
+enum TipoSessao {
+  NORMAL
+  REPOSICAO
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  CONFIRMADO
+  CANCELADO
+}
+
+model Pacote {
+  id                Int      @id @default(autoincrement())
+  nome              String   @db.VarChar(100)
+  frequenciaSemanal Int
+  preco             Decimal  @db.Decimal(10, 2)
+  limiteReposicoes  Int      @default(1)
+  ativo             Boolean  @default(true)
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+
+  alunos Aluno[]
+
+  @@index([ativo])
+  @@map("pacotes")
+}
+
+model Aluno {
+  id                 Int              @id @default(autoincrement())
+  nome               String           @db.VarChar(100)
+  email              String           @unique @db.VarChar(150)
+  telefone           String           @db.VarChar(20)
+  dataNascimento     DateTime         @db.Date
+  sexo               Sexo
+  peso               Decimal?         @db.Decimal(5, 2)
+  altura             Decimal?         @db.Decimal(4, 2)
+  objetivo           String?          @db.VarChar(255)
+  nivelExperiencia   NivelExperiencia @default(INICIANTE)
+  restricaoMedica    String?          @db.Text
+  status             StatusAluno      @default(ATIVO)
+  dataInicioContrato DateTime         @db.Date
+  criadoEm          DateTime         @default(now())
+  atualizadoEm      DateTime         @updatedAt
+
+  pacoteId Int
+  pacote   Pacote @relation(fields: [pacoteId], references: [id], onDelete: Restrict)
+
+  sessoes    Sessao[]
+  avaliacoes Avaliacao[]
+  pagamentos Pagamento[]
+
+  @@index([nome])
+  @@index([status])
+  @@index([pacoteId])
+  @@map("alunos")
+}
+
+model Sessao {
+  id            Int          @id @default(autoincrement())
+  data          DateTime     @db.Date
+  horarioInicio DateTime     @db.Time()
+  horarioFim    DateTime     @db.Time()
+  diaSemana     DiaSemana
+  tipo          TipoSessao   @default(NORMAL)
+  status        StatusSessao @default(AGENDADA)
+  observacoes   String?      @db.Text
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  historico HistoricoSessao[]
+
+  @@index([alunoId])
+  @@index([data])
+  @@index([status])
+  @@index([tipo])
+  @@map("sessoes")
+}
+
+/// Registra cada vez que uma sessão foi reagendada
+model HistoricoSessao {
+  id                    Int      @id @default(autoincrement())
+  dataOriginal          DateTime @db.Date
+  horarioInicioOriginal DateTime @db.Time()
+  horarioFimOriginal    DateTime @db.Time()
+  dataAlterada          DateTime @db.Date
+  horarioInicioAlterado DateTime @db.Time()
+  horarioFimAlterado    DateTime @db.Time()
+  alteradoEm           DateTime @default(now())
+
+  sessaoId Int
+  sessao   Sessao @relation(fields: [sessaoId], references: [id], onDelete: Restrict)
+
+  @@index([sessaoId])
+  @@map("historico_sessoes")
+}
+
+model Avaliacao {
+  id                Int      @id @default(autoincrement())
+  dataAvaliacao     DateTime @db.Date
+  peso              Decimal  @db.Decimal(5, 2)
+  altura            Decimal  @db.Decimal(4, 2)
+  imc               Decimal  @db.Decimal(5, 2)
+  percentualGordura Decimal? @db.Decimal(5, 2)
+  massaMagra        Decimal? @db.Decimal(5, 2)
+  criadoEm         DateTime @default(now())
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  @@index([alunoId])
+  @@index([dataAvaliacao])
+  @@map("avaliacoes")
+}
+
+model Pagamento {
+  id             Int             @id @default(autoincrement())
+  valor          Decimal         @db.Decimal(10, 2)
+  formaPagamento FormaPagamento
+  status         StatusPagamento @default(PENDENTE)
+  dataVencimento DateTime        @db.Date
+  dataPagamento  DateTime?       @db.Date
+  criadoEm      DateTime        @default(now())
+  atualizadoEm  DateTime        @updatedAt
+
+  alunoId Int
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+
+  @@index([alunoId])
+  @@index([status])
+  @@index([dataVencimento])
+  @@map("pagamentos")
+}
