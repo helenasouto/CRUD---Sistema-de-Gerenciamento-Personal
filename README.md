@@ -78,6 +78,19 @@ frontend/
 git clone https://github.com/helenasouto/CRUD---Sistema-de-Gerenciamento-Personal
 cd CRUD---Sistema-de-Gerenciamento-Personal
 ```
+### Atenção ao clonar
+
+Se ao clonar o repositório for criada uma subpasta automaticamente, entre nela antes de rodar qualquer comando:
+```bash
+cd CRUD---Sistema-de-Gerenciamento-Personal
+```
+
+Certifique-se sempre de estar dentro da pasta correta antes de rodar os comandos. Você pode verificar com:
+```bash
+ls
+```
+
+A pasta deve conter os arquivos `package.json`, `prisma/`, `src/`, etc.
 
 ### 2. Instale as dependências do backend
 ```bash
