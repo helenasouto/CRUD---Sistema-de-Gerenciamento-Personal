@@ -21,7 +21,7 @@ async function main() {
   let sair = false;
   while (!sair) {
     console.clear();
-    console.log(chalk.magenta.bold("\n╔════════════════════════════════════════╗"));
+    console.log(chalk.magenta.bold("\n  ╔════════════════════════════════════════╗"));
     console.log(chalk.magenta.bold("  ║            PERSONAL TRAINER            ║"));
     console.log(chalk.magenta.bold("  ║        Sistema de Gerenciamento        ║"));
     console.log(chalk.magenta.bold("  ╚════════════════════════════════════════╝\n"));
