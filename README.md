@@ -60,9 +60,9 @@ prisma/
 ## Pré-requisitos
 
 - Node.js v18+
-- PostgreSQL rodando localmente ou via Docker
+- Prisma 5
+- PostgreSQL 16 rodando localmente ou via Docker
 - npm
-
 ---
 
 ## Como rodar o projeto
