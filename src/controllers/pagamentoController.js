@@ -41,3 +41,10 @@ export const deletarPagamento = async (req, res) => {
     res.status(200).json({ message: 'Pagamento deletado com sucesso.' })
   } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
 }
+
+export const aplicarDescontoIndicacao = async (req, res) => {
+  try {
+    const resultado = await pagamentoServices.aplicarDescontoIndicacao(req.params.alunoId)
+    res.status(200).json(resultado)
+  } catch (e) { res.status(e.status || 400).json({ error: e.message }) }
+}

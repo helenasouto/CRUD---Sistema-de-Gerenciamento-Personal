@@ -67,5 +67,22 @@ export const pagamentoServices = {
     const pagamento = await prisma.pagamento.findUnique({ where: { id: Number(id) } })
     if (!pagamento) throw { status: 404, message: 'Pagamento não encontrado.' }
     await prisma.pagamento.delete({ where: { id: Number(id) } })
+  },
+
+  async aplicarDescontoIndicacao(alunoId) {
+    if (!alunoId) throw { status: 400, message: 'Informe o ID do aluno.' }
+
+    const aluno = await prisma.aluno.findUnique({ where: { id: Number(alunoId) } })
+    if (!aluno) throw { status: 404, message: 'Aluno não encontrado.' }
+
+    if (!aluno.indicadoPorId)
+      throw { status: 400, message: 'Aluno não foi indicado por ninguém.' }
+
+    if (aluno.descontoUsado)
+      throw { status: 409, message: 'Desconto de indicação já foi utilizado.' }
+
+    await prisma.$executeRaw`CALL aplicar_desconto_indicacao(${Number(alunoId)}::integer)`
+
+    return { message: 'Desconto de 10% aplicado com sucesso no primeiro pagamento pendente.' }
   }
 }

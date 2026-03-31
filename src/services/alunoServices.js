@@ -24,6 +24,8 @@ export const alunoServices = {
         objetivo: dados.objetivo,
         restricaoMedica: dados.restricaoMedica,
         nivelExperiencia: dados.nivelExperiencia,
+        academia: dados.academia,
+        indicadoPorId: dados.indicadoPorId ? Number(dados.indicadoPorId) : undefined,
       }
     })
   },
@@ -32,30 +34,30 @@ export const alunoServices = {
     return prisma.aluno.findMany({ include: { pacote: true } })
   },
 
-async buscarPorId(id) {
-  if (!id) throw { status: 400, message: 'ID não informado.' }
-  
-  const aluno = await prisma.aluno.findUnique({
-    where: { id: Number(id) },
-    include: { pacote: true, sessoes: true, avaliacoes: true }
-  })
-  if (!aluno) throw { status: 404, message: 'Aluno não encontrado.' }
-  return aluno
-},
+  async buscarPorId(id) {
+    if (!id) throw { status: 400, message: 'ID não informado.' }
 
-async buscarPorNome(nome) {
-  if (!nome) throw { status: 400, message: 'Informe o nome para buscar.' }
-  
-  const alunos = await prisma.aluno.findMany({
-    where: { nome: { contains: nome, mode: 'insensitive' } },
-    include: { pacote: true }
-  })
+    const aluno = await prisma.aluno.findUnique({
+      where: { id: Number(id) },
+      include: { pacote: true, sessoes: true, avaliacoes: true }
+    })
+    if (!aluno) throw { status: 404, message: 'Aluno não encontrado.' }
+    return aluno
+  },
 
-  if (alunos.length === 0)
-    throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nome}".` }
+  async buscarPorNome(nome) {
+    if (!nome) throw { status: 400, message: 'Informe o nome para buscar.' }
 
-  return alunos
-},
+    const alunos = await prisma.aluno.findMany({
+      where: { nome: { contains: nome, mode: 'insensitive' } },
+      include: { pacote: true }
+    })
+
+    if (alunos.length === 0)
+      throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nome}".` }
+
+    return alunos
+  },
 
   async atualizar(id, dados) {
     const aluno = await prisma.aluno.findUnique({ where: { id: Number(id) } })
@@ -77,26 +79,27 @@ async buscarPorNome(nome) {
     await prisma.pagamento.deleteMany({ where: { alunoId: Number(id) } })
     await prisma.aluno.delete({ where: { id: Number(id) } })
   },
-    async deletarPorNome(nome) {
+
+  async deletarPorNome(nome) {
     if (!nome) throw { status: 400, message: 'Informe o nome para deletar.' }
 
     const alunos = await prisma.aluno.findMany({
-        where: { nome: { contains: nome, mode: 'insensitive' } }
+      where: { nome: { contains: nome, mode: 'insensitive' } }
     })
 
     if (alunos.length === 0)
-        throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nome}".` }
+      throw { status: 404, message: `Nenhum aluno encontrado com o nome "${nome}".` }
 
     if (alunos.length > 1)
-        throw { status: 409, message: `Mais de um aluno encontrado com o nome "${nome}". Use deletar por ID.` }
+      throw { status: 409, message: `Mais de um aluno encontrado com o nome "${nome}". Use deletar por ID.` }
 
     const id = alunos[0].id
 
     const sessaoAgendada = await prisma.sessao.findFirst({
-        where: { alunoId: id, status: 'AGENDADA' }
+      where: { alunoId: id, status: 'AGENDADA' }
     })
     if (sessaoAgendada)
-        throw { status: 409, message: 'Aluno possui sessões agendadas. Cancele-as antes de deletar.' }
+      throw { status: 409, message: 'Aluno possui sessões agendadas. Cancele-as antes de deletar.' }
 
     await prisma.sessao.deleteMany({ where: { alunoId: id } })
     await prisma.avaliacao.deleteMany({ where: { alunoId: id } })
@@ -104,5 +107,5 @@ async buscarPorNome(nome) {
     await prisma.aluno.delete({ where: { id } })
 
     return { message: `Aluno "${alunos[0].nome}" deletado com sucesso.` }
-    }
+  }
 }

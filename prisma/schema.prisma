@@ -92,6 +92,9 @@ model Aluno {
   restricaoMedica    String?          @db.Text
   status             StatusAluno      @default(ATIVO)
   dataInicioContrato DateTime         @db.Date
+  academia           String?          @db.VarChar(100)
+  descontoUsado      Boolean          @default(false)
+  indicadoPorId      Int?
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
 
